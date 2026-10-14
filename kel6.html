@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Prediksi Kelulusan Mahasiswa - Naive Bayes</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen text-slate-800 pb-12">
+
+    <!-- Header Navbar -->
+    <header class="bg-indigo-900 text-white shadow-lg border-b border-indigo-700">
+        <div class="max-w-6xl mx-auto px-4 py-5 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-indigo-600 p-2.5 rounded-xl shadow-md">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0112 20.055a11.952 11.952 0 01-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight">Graduation Predictor AI</h1>
+                    <p class="text-xs text-indigo-200">Sistem Prediksi Kelulusan Mahasiswa Tepat Waktu - Naive Bayes Classifier</p>
+                </div>
+            </div>
+            <div class="text-xs bg-indigo-800/80 px-3 py-1.5 rounded-lg border border-indigo-700 text-indigo-200">
+                Kelompok 6 • Pengantar AI (UNSIKA)
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 mt-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+        <!-- Panel Kiri: Form Input Data Mahasiswa -->
+        <section class="lg:col-span-5 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
+            <div>
+                <div class="flex items-center gap-2 mb-6 border-b pb-4">
+                    <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                    <h2 class="text-lg font-bold text-slate-800">Masukan Profil Akademik</h2>
+                </div>
+
+                <form id="formPrediksi" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Nama Mahasiswa</label>
+                        <input type="text" id="nama" placeholder="Contoh: Budi Santoso" required
+                            class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">IPK Sem 1-4</label>
+                            <input type="number" id="ipk" step="0.01" min="0" max="4" placeholder="2.00 - 4.00" required
+                                class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">SKS Lulus (Sem 4)</label>
+                            <input type="number" id="sks" min="0" max="100" placeholder="60 - 96 SKS" required
+                                class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">IPS Rata-Rata</label>
+                            <input type="number" id="ips" step="0.01" min="0" max="4" placeholder="2.00 - 4.00" required
+                                class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Kehadiran (%)</label>
+                            <input type="number" id="kehadiran" step="0.1" min="0" max="100" placeholder="50 - 100%" required
+                                class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                        </div>
+                    </div>
+
+                    <button type="submit" 
+                        class="w-full mt-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7hr6m0 0v6m0-6L7 17"/>
+                        </svg>
+                        Hitung Prediksi (Naive Bayes)
+                    </button>
+                </form>
+            </div>
+
+            <!-- Tombol Skenario Cepat -->
+            <div class="mt-6 pt-4 border-t border-slate-100">
+                <p class="text-xs font-semibold text-slate-500 mb-2">Uji Skenario Cepat:</p>
+                <div class="flex gap-2">
+                    <button onclick="muatSkenario(3.65, 88, 3.70, 95, 'Budi Santoso')" class="text-xs bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-3 py-1.5 rounded-md font-medium transition">
+                        IPK Tinggi (Tepat Waktu)
+                    </button>
+                    <button onclick="muatSkenario(2.30, 64, 2.20, 60, 'Siti Aminah')" class="text-xs bg-rose-50 text-rose-700 hover:bg-rose-100 px-3 py-1.5 rounded-md font-medium transition">
+                        IPK Rendah (Terlambat)
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Panel Kanan: Hasil Prediksi & Analisis Probabilitas -->
+        <section class="lg:col-span-7 space-y-6">
+
+            <!-- Card Hasil Utama (Awalnya tersembunyi / Placeholder) -->
+            <div id="cardHasil" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div class="flex items-center justify-between border-b pb-4 mb-4">
+                    <h3 class="font-bold text-slate-800 text-base">Hasil Prediksi Kelulusan</h3>
+                    <span id="badgeStatus" class="px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-500 uppercase tracking-wider">
+                        Belum Diperiksa
+                    </span>
+                </div>
+
+                <div id="tampilanKosong" class="text-center py-8 text-slate-400">
+                    <svg class="w-16 h-16 mx-auto mb-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <p class="text-sm">Isi formulir akademik di sebelah kiri dan klik tombol untuk melihat hasil kalkulasi AI Naive Bayes.</p>
+                </div>
+
+                <div id="tampilanHasil" class="hidden space-y-6">
+                    <div class="flex flex-col md:flex-row items-center gap-6 p-4 rounded-xl bg-slate-50 border border-slate-100">
+                        <div id="ikonHasil" class="w-20 h-20 rounded-full flex items-center justify-center shrink-0 shadow-inner">
+                            <!-- Icon disuntikkan via JS -->
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-500 font-medium">Berdasarkan kalkulasi probabilitas Gaussian Naive Bayes:</p>
+                            <h4 id="teksHasilMahasiswa" class="text-xl font-extrabold text-slate-800 mt-0.5">---</h4>
+                            <p id="keteranganHasil" class="text-sm mt-1 text-slate-600">---</p>
+                        </div>
+                    </div>
+
+                    <!-- Progress Bar Probabilitas Posterior -->
+                    <div class="space-y-3">
+                        <div class="flex justify-between text-xs font-bold">
+                            <span class="text-emerald-700">P(TEPAT WAKTU | X)</span>
+                            <span id="persenTepat" class="text-emerald-700">0%</span>
+                        </div>
+                        <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden flex">
+                            <div id="barTepat" class="bg-emerald-500 h-full transition-all duration-700" style="width: 0%"></div>
+                            <div id="barTerlambat" class="bg-rose-500 h-full transition-all duration-700" style="width: 0%"></div>
+                        </div>
+                        <div class="flex justify-between text-xs font-bold pt-1">
+                            <span class="text-rose-700">P(TERLAMBAT | X)</span>
+                            <span id="persenTerlambat" class="text-rose-700">0%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card Parameter Statistik Naive Bayes Model -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <h3 class="font-bold text-slate-800 text-sm mb-3 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                    Parameter Statistik Model (Gaussian Parameters)
+                </h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs text-left text-slate-600 border border-slate-100">
+                        <thead class="bg-slate-50 font-semibold text-slate-700 border-b">
+                            <tr>
+                                <th class="p-2">Atribut Akademik</th>
+                                <th class="p-2 text-center bg-emerald-50/50 text-emerald-800">Mean Tepat (&mu;)</th>
+                                <th class="p-2 text-center bg-emerald-50/50 text-emerald-800">Var Tepat (&sigma;&sup2;)</th>
+                                <th class="p-2 text-center bg-rose-50/50 text-rose-800">Mean Lambat (&mu;)</th>
+                                <th class="p-2 text-center bg-rose-50/50 text-rose-800">Var Lambat (&sigma;&sup2;)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr>
+                                <td class="p-2 font-medium">IPK Semester 1-4</td>
+                                <td class="p-2 text-center">3.42</td>
+                                <td class="p-2 text-center">0.0625</td>
+                                <td class="p-2 text-center">2.65</td>
+                                <td class="p-2 text-center">0.0900</td>
+                            </tr>
+                            <tr>
+                                <td class="p-2 font-medium">SKS Lulus</td>
+                                <td class="p-2 text-center">86.50</td>
+                                <td class="p-2 text-center">20.2500</td>
+                                <td class="p-2 text-center">70.00</td>
+                                <td class="p-2 text-center">36.0000</td>
+                            </tr>
+                            <tr>
+                                <td class="p-2 font-medium">IPS Rata-rata</td>
+                                <td class="p-2 text-center">3.40</td>
+                                <td class="p-2 text-center">0.0729</td>
+                                <td class="p-2 text-center">2.60</td>
+                                <td class="p-2 text-center">0.0841</td>
+                            </tr>
+                            <tr>
+                                <td class="p-2 font-medium">Kehadiran (%)</td>
+                                <td class="p-2 text-center">90.00</td>
+                                <td class="p-2 text-center">25.0000</td>
+                                <td class="p-2 text-center">72.00</td>
+                                <td class="p-2 text-center">64.0000</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- Script Logika Naive Bayes JavaScript -->
+    <script>
+        // Parameter Statistik hasil pelatihan model Gaussian Naive Bayes (data.csv)
+        const modelStats = {
+            prior: {
+                tepat: 0.525,
+                terlambat: 0.475
+            },
+            tepat: {
+                ipk: { mean: 3.42, var: 0.0625 },
+                sks: { mean: 86.5, var: 20.25 },
+                ips: { mean: 3.40, var: 0.0729 },
+                kehadiran: { mean: 90.0, var: 25.0 }
+            },
+            terlambat: {
+                ipk: { mean: 2.65, var: 0.0900 },
+                sks: { mean: 70.0, var: 36.00 },
+                ips: { mean: 2.60, var: 0.0841 },
+                kehadiran: { mean: 72.0, var: 64.0 }
+            }
+        };
+
+        // Fungsi Kepadatan Probabilitas Gaussian (Probability Density Function)
+        function gaussianLikelihood(x, mean, variance) {
+            const stdDev = Math.sqrt(variance);
+            const exponent = Math.exp(-Math.pow(x - mean, 2) / (2 * variance));
+            return (1 / (Math.sqrt(2 * Math.PI) * stdDev)) * exponent;
+        }
+
+        // Fungsi Memuat Skenario Uji Cepat
+        function muatSkenario(ipk, sks, ips, hadir, nama) {
+            document.getElementById('nama').value = nama;
+            document.getElementById('ipk').value = ipk;
+            document.getElementById('sks').value = sks;
+            document.getElementById('ips').value = ips;
+            document.getElementById('kehadiran').value = hadir;
+            prosesPrediksi();
+        }
+
+        // Handle Submit Form
+        document.getElementById('formPrediksi').addEventListener('submit', function(e) {
+            e.preventDefault();
+            prosesPrediksi();
+        });
+
+        // Eksekusi Logika Utama Naive Bayes
+        function prosesPrediksi() {
+            const nama = document.getElementById('nama').value;
+            const ipk = parseFloat(document.getElementById('ipk').value);
+            const sks = parseFloat(document.getElementById('sks').value);
+            const ips = parseFloat(document.getElementById('ips').value);
+            const hadir = parseFloat(document.getElementById('kehadiran').value);
+
+            // 1. Hitung Likelihood P(X_i | Class) Tepat Waktu
+            const pIpkTepat = gaussianLikelihood(ipk, modelStats.tepat.ipk.mean, modelStats.tepat.ipk.var);
+            const pSksTepat = gaussianLikelihood(sks, modelStats.tepat.sks.mean, modelStats.tepat.sks.var);
+            const pIpsTepat = gaussianLikelihood(ips, modelStats.tepat.ips.mean, modelStats.tepat.ips.var);
+            const pHadirTepat = gaussianLikelihood(hadir, modelStats.tepat.kehadiran.mean, modelStats.tepat.kehadiran.var);
+
+            const jointTepat = modelStats.prior.tepat * pIpkTepat * pSksTepat * pIpsTepat * pHadirTepat;
+
+            // 2. Hitung Likelihood P(X_i | Class) Terlambat
+            const pIpkLambat = gaussianLikelihood(ipk, modelStats.terlambat.ipk.mean, modelStats.terlambat.ipk.var);
+            const pSksLambat = gaussianLikelihood(sks, modelStats.terlambat.sks.mean, modelStats.terlambat.sks.var);
+            const pIpsLambat = gaussianLikelihood(ips, modelStats.terlambat.ips.mean, modelStats.terlambat.ips.var);
+            const pHadirLambat = gaussianLikelihood(hadir, modelStats.terlambat.kehadiran.mean, modelStats.terlambat.kehadiran.var);
+
+            const jointLambat = modelStats.prior.terlambat * pIpkLambat * pSksLambat * pIpsLambat * pHadirLambat;
+
+            // 3. Normalisasi Posterior Probability P(Class | X)
+            const totalJoint = jointTepat + jointLambat;
+            const probPosteriorTepat = (jointTepat / totalJoint) * 100;
+            const probPosteriorLambat = (jointLambat / totalJoint) * 100;
+
+            // 4. Tampilkan Hasil ke Antarmuka
+            document.getElementById('tampilanKosong').classList.add('hidden');
+            document.getElementById('tampilanHasil').classList.remove('hidden');
+
+            const badgeStatus = document.getElementById('badgeStatus');
+            const ikonHasil = document.getElementById('ikonHasil');
+            const teksHasil = document.getElementById('teksHasilMahasiswa');
+            const keteranganHasil = document.getElementById('keteranganHasil');
+
+            document.getElementById('persenTepat').innerText = probPosteriorTepat.toFixed(2) + '%';
+            document.getElementById('persenTerlambat').innerText = probPosteriorLambat.toFixed(2) + '%';
+            
+            document.getElementById('barTepat').style.width = probPosteriorTepat + '%';
+            document.getElementById('barTerlambat').style.width = probPosteriorLambat + '%';
+
+            if (probPosteriorTepat >= 50) {
+                badgeStatus.className = "px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 uppercase tracking-wider";
+                badgeStatus.innerText = "TEPAT WAKTU";
+
+                ikonHasil.className = "w-20 h-20 rounded-full flex items-center justify-center shrink-0 bg-emerald-100 text-emerald-600 shadow-inner";
+                ikonHasil.innerHTML = `<svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+
+                teksHasil.innerHTML = `${nama}: <span class="text-emerald-600">Diprediksi LULUS TEPAT WAKTU</span>`;
+                keteranganHasil.innerText = `Mahasiswa memiliki peluang ${probPosteriorTepat.toFixed(2)}% untuk lulus tepat waktu (&le; 8 semester). Pertahankan performa akademik!`;
+            } else {
+                badgeStatus.className = "px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 uppercase tracking-wider";
+                badgeStatus.innerText = "POTENSI TERLAMBAT";
+
+                ikonHasil.className = "w-20 h-20 rounded-full flex items-center justify-center shrink-0 bg-rose-100 text-rose-600 shadow-inner";
+                ikonHasil.innerHTML = `<svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>`;
+
+                teksHasil.innerHTML = `${nama}: <span class="text-rose-600">Berpotensi TERLAMBAT LULUS</span>`;
+                keteranganHasil.innerText = `Mahasiswa memiliki peluang ${probPosteriorLambat.toFixed(2)}% mengalami kelambatan lulus. Direkomendasikan bimbingan khusus dengan Dosen PA.`;
+            }
+        }
+    </script>
+</body>
+</html>
